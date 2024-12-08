@@ -14,9 +14,9 @@ This project demonstrates the simulation of a self-service car wash system using
   - Water nozzle
   - Soap nozzle
   - Water nozzle
-- **Controller**: Alternates between queues to allow vehicles into free bays.
+- **Controller**: Alternates between carQueues to allow vehicles into free bays.
 - **Dynamic Behavior**: Vehicles repeatedly enter, wash, and leave the car wash.
-- **Visualization**: Real-time display of queues, vehicle states, and wash bay activity.
+- **Visualization**: Real-time display of carQueues, vehicle states, and wash bay activity.
 
 ---
 
@@ -24,6 +24,6 @@ This project demonstrates the simulation of a self-service car wash system using
 
 - **Thread Synchronization**: Manages access to shared resources (nozzles) using mutual exclusion mechanisms.
 - **Configurable Parameters**: Flexible setup for the number of wash bays, vehicles, and simulation behavior.
-- **Visualization**: A simple GUI panel showing the states of queues, vehicles, and wash bays.
+- **Visualization**: A simple GUI panel showing the states of carQueues, vehicles, and wash bays.
 - **Concurrency Control**: Uses Java concurrency primitives (`synchronized`, `ReentrantLock`, etc.).
 
