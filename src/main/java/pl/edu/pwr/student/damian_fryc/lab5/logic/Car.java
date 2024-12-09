@@ -13,7 +13,7 @@ public class Car extends Thread {
 	public final CarUI carUI;
 	private final ArrayList<CarQueue> carQueues;
 	private CarQueue carQueue = null;
-
+	public static double WAITING_TIME_SCALE = 1;
 	public Car(int id, ArrayList<CarQueue> carQueues, CarUI carUI){
 		letter = (char) (id + 'a');
 		this.carQueues = carQueues;
@@ -24,10 +24,10 @@ public class Car extends Thread {
 	public void run(){
 		while (true){
 			try {
-				sleep(RandomGenerator.getDefault().nextInt(500, 10000));
+				sleep((long) (WAITING_TIME_SCALE * RandomGenerator.getDefault().nextInt(500, 10000)));
 				int slotInQueue;
 				do {
-					sleep(250);
+					sleep((long) (WAITING_TIME_SCALE * 1000));
 					slotInQueue = reserveSlotInQueue();
 				} while(slotInQueue == -1);
 
@@ -44,9 +44,10 @@ public class Car extends Thread {
 				System.out.println(letter + " arrived to " + washBay.id);
 
 				carUI.moveToWashBay(washBay);
-				waterPhase();
-				soapPhase();
-				waterPhase();
+
+				washPhase(Washer.WasherType.WATER);
+				washPhase(Washer.WasherType.SOAP);
+				washPhase(Washer.WasherType.WATER);
 
 				washBay.removeCar();
 				washBay = null;
@@ -72,45 +73,19 @@ public class Car extends Thread {
 
 		return reserved;
 	}
-	private void waterPhase() throws InterruptedException {
+	private void washPhase(Washer.WasherType washerType) throws InterruptedException {
 		while (true) {
-			if (washBay.waterWashers[0].semaphore.tryAcquire(1000, TimeUnit.MILLISECONDS)) {
-				washBay.waterWashers[0].use();
-				System.out.println(letter + " washed in 1");
+			Washer washer = washBay.tryUseLeft(washerType, (long) (WAITING_TIME_SCALE * 1000));
+			if(washer != null) {
+				washer.use(1);
 				return;
-			} else {
-				System.out.println(letter + " not washed in 1");
 			}
 
-			if (washBay.waterWashers[1] != null && washBay.waterWashers[1].semaphore.tryAcquire(1000, TimeUnit.MILLISECONDS)) {
-				washBay.waterWashers[1].use();
-				System.out.println(letter + " washed in 2");
+			washer = washBay.tryUseRight(washerType, (long) (WAITING_TIME_SCALE * 1000));
+			if(washer != null) {
+				washer.use(0);
 				return;
-			} else {
-				System.out.println(letter + " not washed in 2");
 			}
 		}
 	}
-	private void soapPhase() throws InterruptedException {
-		while (true) {
-			if (washBay.soapWashers[0].semaphore.tryAcquire(1000, TimeUnit.MILLISECONDS)) {
-				washBay.soapWashers[0].use();
-				System.out.println(letter + " soaped in 1");
-				return;
-			} else {
-				System.out.println(letter + " not soaped in 1");
-			}
-
-			if (washBay.soapWashers[1] != null && washBay.soapWashers[1].semaphore.tryAcquire(1000, TimeUnit.MILLISECONDS)) {
-				washBay.soapWashers[1].use();
-				System.out.println(letter + " soaped in 2");
-				return;
-			} else {
-				System.out.println(letter + " not soaped in 2");
-			}
-		}
-	}
-
-
-
 }

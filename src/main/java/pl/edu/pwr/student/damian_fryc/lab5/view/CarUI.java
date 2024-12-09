@@ -1,12 +1,14 @@
 package pl.edu.pwr.student.damian_fryc.lab5.view;
 
 import javafx.animation.PathTransition;
+import javafx.application.Platform;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.*;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import pl.edu.pwr.student.damian_fryc.lab5.logic.Car;
 import pl.edu.pwr.student.damian_fryc.lab5.logic.CarQueue;
 import pl.edu.pwr.student.damian_fryc.lab5.logic.WashBay;
 
@@ -18,6 +20,8 @@ public class CarUI {
     private final PathTransition pathTransition;
     public double x = 10;
     public double y = -100;
+    private final Object animationStop = new Object();
+    private boolean isPlaying = false;
 
     public CarUI(Path path, PathTransition pathTransition, char letter) {
 
@@ -32,7 +36,7 @@ public class CarUI {
         carShape.setTranslateY(y);
 
         pathTransition.setNode(carShape);
-        pathTransition.setDuration(Duration.millis(500));
+        pathTransition.setDuration(Duration.millis(Car.WAITING_TIME_SCALE * 500));
         pathTransition.setCycleCount(1);
         pathTransition.setAutoReverse(false);
         pathTransition.setPath(path);
@@ -41,6 +45,14 @@ public class CarUI {
 
         this.path = path;
         this.pathTransition = pathTransition;
+
+        // after the end of the animation send signal
+        pathTransition.setOnFinished(event -> {
+            synchronized (animationStop) {
+                isPlaying = false;
+                animationStop.notify();
+            }
+        });
     }
 
     public Pane getShape() {
@@ -48,61 +60,105 @@ public class CarUI {
     }
 
     public void moveToCarQueue(CarQueue carQueue, int slotInQueue) throws InterruptedException {
-        path.getElements().clear();
-        path.getElements().add(new MoveTo(x, y)); // Start
 
-        // to Y of queue
-        y = carQueue.carQueueUI.y;
-        path.getElements().add(new LineTo(x, y));
+        if (isPlaying) {
+            synchronized (animationStop) {
+                animationStop.wait();
+            }
+        }
 
-        // to X + pos and Y of queue
-        x = carQueue.carQueueUI.x + (carQueue.getQueueCapacity() - slotInQueue) * CarQueueUI.LINE_LENGTH_PER_CAR - 10;
-        path.getElements().add(new LineTo(x, y));
+        Platform.runLater(() -> {
+            path.getElements().clear();
+            path.getElements().add(new MoveTo(x, y)); // Start
 
+            // to Y of queue
+            y = carQueue.carQueueUI.y;
+            path.getElements().add(new LineTo(x, y));
 
-        pathTransition.play();
-        Thread.sleep((long) pathTransition.getDuration().toMillis());
+            // to X + pos and Y of queue
+            x = carQueue.carQueueUI.x + (carQueue.getQueueCapacity() - slotInQueue) * CarQueueUI.LINE_LENGTH_PER_CAR - 10;
+            path.getElements().add(new LineTo(x, y));
+
+            isPlaying = true;
+            pathTransition.play();
+        });
+        synchronized (animationStop) {
+            animationStop.wait();
+        }
+//        Thread.sleep((long) (pathTransition.getDuration().toMillis()  * 1.2));
     }
 
     public void moveCarInQueue(int newPos, double queueX) {
-        path.getElements().clear();
-        path.getElements().add(new MoveTo(this.x, y)); // Start
+        Platform.runLater(() -> {
+            path.getElements().clear();
+            path.getElements().add(new MoveTo(this.x, y)); // Start
 
-        // to X + slot size in queue
-        this.x =  queueX + newPos * CarQueueUI.LINE_LENGTH_PER_CAR - 10;
-        path.getElements().add(new LineTo(this.x, y));
+            // to X + slot size in queue
+            this.x =  queueX + newPos * CarQueueUI.LINE_LENGTH_PER_CAR - 10;
+            path.getElements().add(new LineTo(this.x, y));
 
-        pathTransition.play();
+            isPlaying = true;
+            pathTransition.play();
+        });
+
     }
 
     public void moveToWashBay(WashBay washBay) throws InterruptedException {
-        path.getElements().clear();
-        path.getElements().add(new MoveTo(x, y));
 
-        // to X of wash bay
-        x = washBay.washBayUI.x;
-        path.getElements().add(new LineTo(x, y));
 
-        // to X and Y of wash bay
-        y = washBay.washBayUI.y;
-        path.getElements().add(new LineTo(x, y));
+        if (isPlaying) {
+            synchronized (animationStop) {
+                animationStop.wait();
+            }
+        }
+        Platform.runLater(() -> {
+            path.getElements().clear();
+            path.getElements().add(new MoveTo(x, y));
 
-        pathTransition.play();
-        Thread.sleep((long) pathTransition.getDuration().toMillis());
+            // to X of wash bay
+            x = washBay.washBayUI.x;
+            path.getElements().add(new LineTo(x, y));
+
+            // to X and Y of wash bay
+            y = washBay.washBayUI.y;
+            path.getElements().add(new LineTo(x, y));
+
+            isPlaying = true;
+            pathTransition.play();
+        });
+        synchronized (animationStop) {
+            animationStop.wait();
+        }
+//        Thread.sleep((long) (pathTransition.getDuration().toMillis()  * 1.2));
     }
 
     public void moveToEdgeOfScreen() throws InterruptedException {
-        path.getElements().clear();
-        path.getElements().add(new MoveTo(x, y));
 
-        // to -Y
-        y = -100;
-        path.getElements().add(new LineTo(x, y));
+        if (isPlaying) {
+            synchronized (animationStop) {
+                animationStop.wait();
+            }
+        }
 
-        // toi starting position
-        x = -10;
-        path.getElements().add(new LineTo(x, y));
-        pathTransition.play();
-        Thread.sleep((long) pathTransition.getDuration().toMillis());
+        Platform.runLater(() -> {
+            path.getElements().clear();
+            path.getElements().add(new MoveTo(x, y));
+
+            // to -Y
+            y = -100;
+            path.getElements().add(new LineTo(x, y));
+
+            // toi starting position
+            x = -10;
+            path.getElements().add(new LineTo(x, y));
+
+            isPlaying = true;
+            pathTransition.play();
+        });
+
+        synchronized (animationStop) {
+            animationStop.wait();
+        }
+//        Thread.sleep((long) (pathTransition.getDuration().toMillis()  * 1.2));
     }
 }

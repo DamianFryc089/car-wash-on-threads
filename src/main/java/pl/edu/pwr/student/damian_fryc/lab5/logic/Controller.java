@@ -6,16 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Controller extends Thread{
-	private ArrayList<WashBay> washBays;
-	private ArrayList<CarQueue> carQueues;
+	private final ArrayList<WashBay> washBays;
+	private final ArrayList<CarQueue> carQueues;
 	private int lastPicked = 0;
-	private int waitTime;
 	private final ControllerUI controllerUI;
+	public static double WAITING_TIME_SCALE = 1;
 
-	public Controller(List<WashBay> washBays, List<CarQueue> carQueues, int waitTime, ControllerUI controllerUI) {
+	public Controller(List<WashBay> washBays, List<CarQueue> carQueues, ControllerUI controllerUI) {
 		this.washBays = (ArrayList<WashBay>) washBays;
 		this.carQueues = (ArrayList<CarQueue>) carQueues;
-		this.waitTime = waitTime;
         this.controllerUI = controllerUI;
     }
 
@@ -24,7 +23,7 @@ public class Controller extends Thread{
 		while (true)
 		{
 			try {
-				sleep(waitTime/2);
+				sleep((long) (WAITING_TIME_SCALE * 500));
 
 				WashBay emptyWashBay = null;
 				for (WashBay washBay : washBays){

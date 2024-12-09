@@ -5,10 +5,7 @@ import javafx.application.Platform;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Path;
 import pl.edu.pwr.student.damian_fryc.lab5.logic.*;
-import pl.edu.pwr.student.damian_fryc.lab5.view.CarQueueUI;
-import pl.edu.pwr.student.damian_fryc.lab5.view.CarUI;
-import pl.edu.pwr.student.damian_fryc.lab5.view.ControllerUI;
-import pl.edu.pwr.student.damian_fryc.lab5.view.WashBayUI;
+import pl.edu.pwr.student.damian_fryc.lab5.view.*;
 
 import java.util.ArrayList;
 
@@ -18,28 +15,34 @@ public class SimulationController {
     private ArrayList<WashBay> washBays = new ArrayList<>();
     private ArrayList<Car> cars = new ArrayList<>();
     public SimulationController(Pane root) {
-        this.root = root;
-        int queueCapacity = 10;
+        Car.WAITING_TIME_SCALE = 1;
+        Controller.WAITING_TIME_SCALE = 1;
+        Washer.WAITING_TIME_SCALE = 1;
 
-        createQueues(7);
-        createWashBays(15);
-        createCars(40);
+        CarQueue.CAPACITY = 10;
+
+
+        this.root = root;
+
+        createQueues(2);
+        createWashBays(4);
+        createCars(10);
 
         Platform.runLater(() -> {
             for (Car car : cars)
                 car.start();
         });
-        createController(queueCapacity);
+        createController();
 
     }
 
-    private void createController(int queueCapacity) {
+    private void createController() {
         PathTransition pathTransition = new PathTransition();
         Path path = new Path();
-        ControllerUI controllerUI = new ControllerUI(path, pathTransition, queueCapacity, 1000);
+        ControllerUI controllerUI = new ControllerUI(path, pathTransition);
         root.getChildren().addAll(controllerUI.getShape(), path);
 
-        Controller controller  = new Controller(washBays, carQueues, 1000, controllerUI);
+        Controller controller  = new Controller(washBays, carQueues, controllerUI);
         controller.start();
     }
 
@@ -54,28 +57,33 @@ public class SimulationController {
 
     private void createWashBays(int amount){
         washBays.clear();
-        ArrayList<WaterWasher> waterWashers = new ArrayList<>();
-        ArrayList<SoapWasher> soapWashers = new ArrayList<>();
+        ArrayList<Washer> waterWashers = new ArrayList<>();
+        ArrayList<Washer> soapWashers = new ArrayList<>();
 
         for (int i = 0; i < amount - 1; i++) {
-            waterWashers.add(new WaterWasher());
-            soapWashers.add(new SoapWasher());
+            WasherUI soapWasherUI = new WasherUI(0, i);
+            soapWashers.add(new Washer(soapWasherUI));
+
+            WasherUI waterWasherUI = new WasherUI(1, i);
+            waterWashers.add(new Washer(waterWasherUI));
+
+            root.getChildren().addAll(soapWasherUI.getShape(), waterWasherUI.getShape());
         }
 
-        WaterWasher[] waterWashersC;
-        SoapWasher[] soapWashersC;
+        Washer[] waterWashersC;
+        Washer[] soapWashersC;
         for (int i = 0; i < amount; i++) {
             if (i == 0) {
-                waterWashersC = new WaterWasher[]{waterWashers.get(i), null};
-                soapWashersC = new SoapWasher[]{soapWashers.get(i), null};
+                waterWashersC = new Washer[]{null, waterWashers.get(i)};
+                soapWashersC = new Washer[]{null, soapWashers.get(i)};
             }
             else if(i == amount - 1){
-                waterWashersC = new WaterWasher[]{waterWashers.get(i-1), null};
-                soapWashersC = new SoapWasher[]{soapWashers.get(i-1), null};
+                waterWashersC = new Washer[]{waterWashers.get(i-1), null};
+                soapWashersC = new Washer[]{soapWashers.get(i-1), null};
             }
             else {
-                waterWashersC = new WaterWasher[]{waterWashers.get(i-1), waterWashers.get(i)};
-                soapWashersC = new SoapWasher[]{soapWashers.get(i-1), soapWashers.get(i)};
+                waterWashersC = new Washer[]{waterWashers.get(i-1), waterWashers.get(i)};
+                soapWashersC = new Washer[]{soapWashers.get(i-1), soapWashers.get(i)};
             }
             WashBayUI washBayUI = new WashBayUI(i);
             root.getChildren().addAll(washBayUI.getShape());
