@@ -152,9 +152,7 @@ public class Simulation extends Application {
 		StackPane textRegion = new StackPane(carAmount);
 
 		Button addButton = new Button("add");
-		addButton.setOnAction(event -> {
-			simulationController.addCars(1);
-		});
+		addButton.setOnAction(event -> simulationController.addCars(1));
 
 		Button loopButton = new Button("loop: on");
 		loopButton.setOnAction(event -> {
@@ -174,7 +172,7 @@ public class Simulation extends Application {
 		TextField queues = new TextField();
 		queues.setTextFormatter(new TextFormatter<>(change -> {
 			String newText = change.getText();
-			if (newText.matches("[0-9]*"))
+			if (newText.matches("\\d*"))
 				return change;
 			return null;
 		}));
@@ -186,7 +184,7 @@ public class Simulation extends Application {
 		TextField washBays = new TextField();
 		washBays.setTextFormatter(new TextFormatter<>(change -> {
 			String newText = change.getText();
-			if (newText.matches("[0-9]*"))
+			if (newText.matches("\\d*"))
 				return change;
 			return null;
 		}));
@@ -209,5 +207,6 @@ public class Simulation extends Application {
 
 	public static void main(String[] args) {
 		launch(args);
+		System.exit(0);
 	}
 }

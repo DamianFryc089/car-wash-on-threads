@@ -24,12 +24,14 @@ public class Car extends Thread {
         this.carUI = carUI;
 		this.speedScale = speedScale;
 		this.carLoop = carLoop;
+
+		setName("Car-"+letter);
     }
 
 	@Override
 	public void run(){
-		do{
-			try {
+		try {
+			do {
 				sleep((long) (speedScale * RandomGenerator.getDefault().nextInt(500, 10000)));
 				int slotInQueue;
 				do {
@@ -58,12 +60,8 @@ public class Car extends Thread {
 
 				carUI.moveToEdgeOfScreen();
 				System.out.println(letter + " DONE!!");
-
-			} catch (InterruptedException ignored) {
-				carLoop = false;
-			}
-		}while (carLoop);
-
+			}while (carLoop);
+		} catch (InterruptedException ignored) {}
 		carEndListener.onThreadComplete(this);
     }
 

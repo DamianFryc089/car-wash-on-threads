@@ -17,13 +17,15 @@ public class Controller extends Thread{
 		this.carQueues = (ArrayList<CarQueue>) carQueues;
         this.controllerUI = controllerUI;
 		this.speedScale = speedScale;
+
+		setName("Controller");
     }
 
 	@Override
 	public void run(){
-		while (true)
-		{
-			try {
+		try {
+			while (true)
+			{
 				sleep((long) (speedScale * 500));
 
 				// find empty wash bay
@@ -48,10 +50,7 @@ public class Controller extends Thread{
 
 				sleep((long) (car.getSpeedScale() * 500));
 			}
-			catch (InterruptedException ignored) {
-				break;
-			}
-		}
+		} catch (InterruptedException ignored) {}
     }
 	public void setSpeedScale(double speedScale) {
 		this.speedScale = speedScale;

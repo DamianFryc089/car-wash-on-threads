@@ -161,8 +161,10 @@ public class SimulationController implements CarEndListener{
             carAmountText.setText("Amount: " + cars.size());
         }
     }
+
     public void removeSimulationController() {
         drawArea.getChildren().clear();
+
         synchronized (cars) {
             for (Car car : cars)
                 car.interrupt();

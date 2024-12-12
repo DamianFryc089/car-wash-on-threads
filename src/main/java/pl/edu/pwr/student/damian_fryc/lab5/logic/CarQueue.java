@@ -37,7 +37,7 @@ public class CarQueue {
 	}
 
 
-	public synchronized Car getFirst() throws InterruptedException {
+	public synchronized Car getFirst() {
 		if (size == 0) return null;
 
 		Car removedCar = queuedCars[0];
@@ -85,7 +85,6 @@ public class CarQueue {
 	public synchronized int getSlotInQueue(Car car) {
 		for (int i = 0; i < reserved; i++)
 			if (reservedQueuedCars[i] == car) {
-				System.out.println(i);
 				return i;
 			}
 		return -1;

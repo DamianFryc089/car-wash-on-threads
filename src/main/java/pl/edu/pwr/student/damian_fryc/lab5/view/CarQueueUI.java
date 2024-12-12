@@ -1,15 +1,9 @@
 package pl.edu.pwr.student.damian_fryc.lab5.view;
 
-import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Path;
 import pl.edu.pwr.student.damian_fryc.lab5.logic.Car;
 import pl.edu.pwr.student.damian_fryc.lab5.logic.CarQueue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class CarQueueUI {
     public static final double QUEUE_HEIGHT = 30;
@@ -47,8 +41,7 @@ public class CarQueueUI {
         return pane;
     }
 
-    public void moveCarsInQueue(Car[] queuedCars) throws InterruptedException {
-        System.out.println(Arrays.toString(queuedCars));
+    public void moveCarsInQueue(Car[] queuedCars) {
         for (int i = 0; i < queuedCars.length; i++) {
             if(queuedCars[i] != null)
                 queuedCars[i].carUI.moveCarInQueue((queuedCars.length - i), x);

@@ -12,9 +12,6 @@ import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 import pl.edu.pwr.student.damian_fryc.lab5.logic.CarQueue;
-import pl.edu.pwr.student.damian_fryc.lab5.logic.Controller;
-
-import java.util.random.RandomGenerator;
 
 public class ControllerUI {
     public double x;
