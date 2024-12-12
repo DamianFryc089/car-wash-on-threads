@@ -1,48 +1,69 @@
 package pl.edu.pwr.student.damian_fryc.lab5.view;
 
 import javafx.application.Platform;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Paint;
-import javafx.scene.shape.Line;
+import javafx.scene.shape.Polyline;
 import pl.edu.pwr.student.damian_fryc.lab5.logic.CarQueue;
 
 public class WasherUI {
-    public double x = 0;
-    public double y = 0;
-    private final StackPane washerShape = new StackPane();
+    public final double x;
+    public final double y;
+
+    private final Pane washerShape = new Pane();
+    private final Polyline leftLine;
+    private final Polyline rightLine;
     public WasherUI(int posFromTop, int washBayId){
-        x = 125 + CarQueueUI.LINE_LENGTH_PER_CAR * CarQueue.CAPACITY + WashBayUI.WIDTH_OF_WASHING_BAY * (washBayId + 1d / 2d);
+        x = 125 + CarQueueUI.LINE_LENGTH_PER_CAR * CarQueue.CAPACITY + WashBayUI.WIDTH_OF_WASHING_BAY * (washBayId + 0.5);
         y = 25 + posFromTop * WashBayUI.HEIGHT_OF_WASHING_BAY / 2 - WashBayUI.HEIGHT_OF_WASHING_BAY/2;
 
-        Line line = new Line(x, y, x, y + WashBayUI.HEIGHT_OF_WASHING_BAY / 3);
+        // < and > shapes
+        leftLine = new Polyline();
+        leftLine.getPoints().addAll(
+                0.0, 0.0,
+                -5.0, WashBayUI.HEIGHT_OF_WASHING_BAY/4,
+                0.0, WashBayUI.HEIGHT_OF_WASHING_BAY/2
+        );
+        rightLine = new Polyline();
+        rightLine.getPoints().addAll(
+                0.0, 0.0,
+                5.0, WashBayUI.HEIGHT_OF_WASHING_BAY/4,
+                0.0, WashBayUI.HEIGHT_OF_WASHING_BAY/2
+        );
 
-        if(posFromTop == 0) line.setStroke(Paint.valueOf("FF0000"));
-        else                line.setStroke(Paint.valueOf("0000FF"));
+        if(posFromTop == 0) {
+            leftLine.setStroke(Paint.valueOf("FF0000"));
+            rightLine.setStroke(Paint.valueOf("FF0000"));
+        }
+        else {
+            leftLine.setStroke(Paint.valueOf("0000FF"));
+            rightLine.setStroke(Paint.valueOf("0000FF"));
+        }
 
-        washerShape.getChildren().addAll(line);
+        washerShape.getChildren().addAll(leftLine, rightLine);
         washerShape.setTranslateX(x);
         washerShape.setTranslateY(y);
         hide();
     }
-    public StackPane getShape() {
+    public Pane getShape() {
         return washerShape;
     }
     public void hide(){
         Platform.runLater(() -> {
-            washerShape.setVisible(false);
-            washerShape.setTranslateX(x);
+            leftLine.setVisible(false);
+            rightLine.setVisible(false);
         });
     }
     public void showLeft(){
         Platform.runLater(() -> {
-            washerShape.setTranslateX(x - 3);
-            washerShape.setVisible(true);
+            leftLine.setVisible(true);
+            rightLine.setVisible(false);
         });
     }
     public void showRight(){
         Platform.runLater(() -> {
-            washerShape.setTranslateX(x + 3);
-            washerShape.setVisible(true);
+            leftLine.setVisible(false);
+            rightLine.setVisible(true);
         });
     }
 }

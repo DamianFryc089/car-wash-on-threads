@@ -3,43 +3,47 @@ package pl.edu.pwr.student.damian_fryc.lab5.logic;
 import pl.edu.pwr.student.damian_fryc.lab5.view.CarUI;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.random.RandomGenerator;
 
 public class Car extends Thread {
-	public final Object lock = new Object();
 	public final char letter;
-	public WashBay washBay = null;
 	public final CarUI carUI;
+
+	private final Object waitInQueueLock = new Object();
 	private final ArrayList<CarQueue> carQueues;
+	private final CarEndListener carEndListener;
+	private WashBay washBay = null;
 	private CarQueue carQueue = null;
-	public static double WAITING_TIME_SCALE = 1;
-	public Car(int id, ArrayList<CarQueue> carQueues, CarUI carUI){
-		letter = (char) (id + 'a');
+	private double speedScale;
+	private boolean carLoop;
+
+	public Car(CarEndListener carEndListener, char letter, ArrayList<CarQueue> carQueues, CarUI carUI, double speedScale, boolean carLoop){
+		this.carEndListener = carEndListener;
+		this.letter = letter;
 		this.carQueues = carQueues;
         this.carUI = carUI;
+		this.speedScale = speedScale;
+		this.carLoop = carLoop;
     }
 
 	@Override
 	public void run(){
-		while (true){
+		do{
 			try {
-				sleep((long) (WAITING_TIME_SCALE * RandomGenerator.getDefault().nextInt(500, 10000)));
+				sleep((long) (speedScale * RandomGenerator.getDefault().nextInt(500, 10000)));
 				int slotInQueue;
 				do {
-					sleep((long) (WAITING_TIME_SCALE * 1000));
+					sleep((long) (speedScale * 1000));
 					slotInQueue = reserveSlotInQueue();
 				} while(slotInQueue == -1);
 
-				carUI.moveToCarQueue(carQueue, slotInQueue);
+				while (carUI.moveToCarQueue(carQueue, this));
 
-				System.out.println(letter + " arrived to queue");
 				carQueue.enqueue(this);
-				synchronized (lock){
-					lock.wait();
-				}
 
-				washBay.setCar(this);
+				synchronized (waitInQueueLock){
+					waitInQueueLock.wait();
+				}
 
 				System.out.println(letter + " arrived to " + washBay.id);
 
@@ -55,11 +59,14 @@ public class Car extends Thread {
 				carUI.moveToEdgeOfScreen();
 				System.out.println(letter + " DONE!!");
 
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+			} catch (InterruptedException ignored) {
+				carLoop = false;
 			}
-		}
+		}while (carLoop);
+
+		carEndListener.onThreadComplete(this);
     }
+
 	private int reserveSlotInQueue(){
 		CarQueue minQueue = carQueues.getFirst();
 		for (int i = 1; i < carQueues.size(); i++) {
@@ -67,25 +74,43 @@ public class Car extends Thread {
 				minQueue = carQueues.get(i);
 		}
 
-		int reserved = minQueue.reserve();
+		int reserved = minQueue.reserve(this);
 		if(reserved != -1)
 			carQueue = minQueue;
 
 		return reserved;
 	}
+
 	private void washPhase(Washer.WasherType washerType) throws InterruptedException {
 		while (true) {
-			Washer washer = washBay.tryUseLeft(washerType, (long) (WAITING_TIME_SCALE * 1000));
+			Washer washer = washBay.tryUseLeft(washerType, (long) (speedScale * 1000));
 			if(washer != null) {
 				washer.use(1);
 				return;
 			}
 
-			washer = washBay.tryUseRight(washerType, (long) (WAITING_TIME_SCALE * 1000));
+			washer = washBay.tryUseRight(washerType, (long) (speedScale * 1000));
 			if(washer != null) {
 				washer.use(0);
 				return;
 			}
+		}
+	}
+	public void setSpeedScale(double speedScale) {
+		this.speedScale = speedScale;
+		carUI.changeAnimationSpeed(speedScale);
+	}
+	public double getSpeedScale() {
+		return speedScale;
+	}
+	public void setLoop(boolean carLoop) {
+		this.carLoop = carLoop;
+	}
+
+	public void setWashBay(WashBay washBay) {
+		this.washBay = washBay;
+		synchronized (waitInQueueLock) {
+			waitInQueueLock.notify();
 		}
 	}
 }

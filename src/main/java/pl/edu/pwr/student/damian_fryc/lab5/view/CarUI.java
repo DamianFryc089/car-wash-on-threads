@@ -15,28 +15,29 @@ import pl.edu.pwr.student.damian_fryc.lab5.logic.WashBay;
 import java.util.random.RandomGenerator;
 
 public class CarUI {
+    public double x = 10;
+    public double y = -100;
+
     private final StackPane carShape = new StackPane();
     private final Path path;
     private final PathTransition pathTransition;
-    public double x = 10;
-    public double y = -100;
     private final Object animationStop = new Object();
     private boolean isPlaying = false;
 
-    public CarUI(Path path, PathTransition pathTransition, char letter) {
+    public CarUI(Path path, PathTransition pathTransition, char letter, double speedScale) {
 
         Text text = new Text(String.valueOf(letter));
 
         int color = RandomGenerator.getDefault().nextInt(0xFFFFFF + 1);
-//        Rectangle rectangle = new Rectangle(10, 10 , Paint.valueOf(String.format("#%06X", color)));
-        Rectangle rectangle = new Rectangle(20, 20 , Paint.valueOf("999999"));
+        Rectangle rectangle = new Rectangle(20, 20 , Paint.valueOf(String.format("#%06X", color)));
+//        Rectangle rectangle = new Rectangle(20, 20 , Paint.valueOf("999999"));
         carShape.getChildren().addAll(rectangle, text);
 
         carShape.setTranslateX(x);
         carShape.setTranslateY(y);
 
         pathTransition.setNode(carShape);
-        pathTransition.setDuration(Duration.millis(Car.WAITING_TIME_SCALE * 500));
+        pathTransition.setDuration(Duration.millis(speedScale * 500));
         pathTransition.setCycleCount(1);
         pathTransition.setAutoReverse(false);
         pathTransition.setPath(path);
@@ -59,7 +60,7 @@ public class CarUI {
         return carShape;
     }
 
-    public void moveToCarQueue(CarQueue carQueue, int slotInQueue) throws InterruptedException {
+    public boolean moveToCarQueue(CarQueue carQueue, Car car) throws InterruptedException {
 
         if (isPlaying) {
             synchronized (animationStop) {
@@ -67,16 +68,22 @@ public class CarUI {
             }
         }
 
+        if( x == carQueue.carQueueUI.x + (CarQueue.CAPACITY - carQueue.getSlotInQueue(car)) * CarQueueUI.LINE_LENGTH_PER_CAR - 10 ) {
+            return false;
+        }
+
         Platform.runLater(() -> {
             path.getElements().clear();
             path.getElements().add(new MoveTo(x, y)); // Start
 
             // to Y of queue
-            y = carQueue.carQueueUI.y;
-            path.getElements().add(new LineTo(x, y));
+            if(y != carQueue.carQueueUI.y) {
+                y = carQueue.carQueueUI.y;
+                path.getElements().add(new LineTo(x, y));
+            }
 
             // to X + pos and Y of queue
-            x = carQueue.carQueueUI.x + (carQueue.getQueueCapacity() - slotInQueue) * CarQueueUI.LINE_LENGTH_PER_CAR - 10;
+            x = carQueue.carQueueUI.x + (CarQueue.CAPACITY - carQueue.getSlotInQueue(car)) * CarQueueUI.LINE_LENGTH_PER_CAR - 10;
             path.getElements().add(new LineTo(x, y));
 
             isPlaying = true;
@@ -85,26 +92,28 @@ public class CarUI {
         synchronized (animationStop) {
             animationStop.wait();
         }
-//        Thread.sleep((long) (pathTransition.getDuration().toMillis()  * 1.2));
+        return true;
     }
 
     public void moveCarInQueue(int newPos, double queueX) {
+
+        if(x == queueX + newPos * CarQueueUI.LINE_LENGTH_PER_CAR - 10) {
+            return;
+        }
         Platform.runLater(() -> {
             path.getElements().clear();
-            path.getElements().add(new MoveTo(this.x, y)); // Start
+            path.getElements().add(new MoveTo(x, y)); // Start
 
             // to X + slot size in queue
-            this.x =  queueX + newPos * CarQueueUI.LINE_LENGTH_PER_CAR - 10;
-            path.getElements().add(new LineTo(this.x, y));
+            x =  queueX + newPos * CarQueueUI.LINE_LENGTH_PER_CAR - 10;
+            path.getElements().add(new LineTo(x, y));
 
             isPlaying = true;
             pathTransition.play();
         });
-
     }
 
     public void moveToWashBay(WashBay washBay) throws InterruptedException {
-
 
         if (isPlaying) {
             synchronized (animationStop) {
@@ -129,7 +138,6 @@ public class CarUI {
         synchronized (animationStop) {
             animationStop.wait();
         }
-//        Thread.sleep((long) (pathTransition.getDuration().toMillis()  * 1.2));
     }
 
     public void moveToEdgeOfScreen() throws InterruptedException {
@@ -148,7 +156,7 @@ public class CarUI {
             y = -100;
             path.getElements().add(new LineTo(x, y));
 
-            // toi starting position
+            // to starting position
             x = -10;
             path.getElements().add(new LineTo(x, y));
 
@@ -159,6 +167,9 @@ public class CarUI {
         synchronized (animationStop) {
             animationStop.wait();
         }
-//        Thread.sleep((long) (pathTransition.getDuration().toMillis()  * 1.2));
+    }
+
+    public void changeAnimationSpeed(double speedScale){
+        pathTransition.setDuration(Duration.millis(speedScale * 500));
     }
 }

@@ -7,10 +7,10 @@ import java.util.random.RandomGenerator;
 
 public class Washer {
     public final Semaphore semaphore = new Semaphore(1, true);
-    public static double WAITING_TIME_SCALE = 1;
     public final WasherUI washerUI;
 
-    enum WasherType{
+    private double speedScale = 1;
+    public enum WasherType{
         WATER,
         SOAP
     }
@@ -19,12 +19,14 @@ public class Washer {
     }
 
     public void use(int direction) throws InterruptedException {
-
         if(direction == 0)  washerUI.showLeft();
         else                washerUI.showRight();
 
-        Thread.sleep((long) (WAITING_TIME_SCALE * RandomGenerator.getDefault().nextInt(1000,5000)));
+        Thread.sleep((long) (speedScale * RandomGenerator.getDefault().nextInt(1000,5000)));
         washerUI.hide();
         semaphore.release();
+    }
+    public void setSpeedScale(double speedScale) {
+        this.speedScale = speedScale;
     }
 }

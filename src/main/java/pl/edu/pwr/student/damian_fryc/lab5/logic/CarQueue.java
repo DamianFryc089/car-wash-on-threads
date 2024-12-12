@@ -6,25 +6,27 @@ import java.util.Arrays;
 
 public class CarQueue {
 	public static int CAPACITY = 10;
+	public final CarQueueUI carQueueUI;
+
 	private final Car[] queuedCars;
+	private final Car[] reservedQueuedCars;
 	private final int id;
 	private int size;
 	private int reserved;
-	public final CarQueueUI carQueueUI;
 
 	public CarQueue(int id, CarQueueUI carQueueUI) {
 		this.queuedCars = new Car[CAPACITY];
+		this.reservedQueuedCars = new Car[CAPACITY];
 		this.id = id;
         this.carQueueUI = carQueueUI;
         this.size = 0;
 		this.reserved = 0;
 	}
 
-
-	public synchronized int reserve(){
+	public synchronized int reserve(Car car){
 		if (reserved == CAPACITY)
 			return -1;
-
+		reservedQueuedCars[reserved] = car;
 		reserved++;
 		return reserved-1;
 	}
@@ -43,20 +45,23 @@ public class CarQueue {
 		for (int i = 1; i < size; i++)
 			queuedCars[i - 1] = queuedCars[i];
 
+		for (int i = 1; i < reserved; i++)
+			reservedQueuedCars[i - 1] = reservedQueuedCars[i];
+
 
 		queuedCars[size - 1] = null;
+		reservedQueuedCars[reserved - 1] = null;
+
 		size--;
 		reserved--;
 		carQueueUI.moveCarsInQueue(queuedCars);
+
 		System.out.println(id + ": " + getQueueString() + " -" + removedCar.letter);
 		return removedCar;
 	}
 
 	public synchronized int getQueueCarCount() {
 		return reserved;
-	}
-	public int getQueueCapacity() {
-		return CAPACITY;
 	}
 
 	@Override
@@ -75,5 +80,14 @@ public class CarQueue {
 			else text.append(" ").append(queuedCars[i].letter).append(" ");
 		}
 		return text.toString();
+	}
+
+	public synchronized int getSlotInQueue(Car car) {
+		for (int i = 0; i < reserved; i++)
+			if (reservedQueuedCars[i] == car) {
+				System.out.println(i);
+				return i;
+			}
+		return -1;
 	}
 }

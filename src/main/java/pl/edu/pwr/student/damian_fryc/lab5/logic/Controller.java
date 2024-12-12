@@ -8,14 +8,15 @@ import java.util.List;
 public class Controller extends Thread{
 	private final ArrayList<WashBay> washBays;
 	private final ArrayList<CarQueue> carQueues;
-	private int lastPicked = 0;
 	private final ControllerUI controllerUI;
-	public static double WAITING_TIME_SCALE = 1;
+	private int lastPicked = 0;
+	private double speedScale;
 
-	public Controller(List<WashBay> washBays, List<CarQueue> carQueues, ControllerUI controllerUI) {
+	public Controller(List<WashBay> washBays, List<CarQueue> carQueues, ControllerUI controllerUI, double speedScale) {
 		this.washBays = (ArrayList<WashBay>) washBays;
 		this.carQueues = (ArrayList<CarQueue>) carQueues;
         this.controllerUI = controllerUI;
+		this.speedScale = speedScale;
     }
 
 	@Override
@@ -23,8 +24,9 @@ public class Controller extends Thread{
 		while (true)
 		{
 			try {
-				sleep((long) (WAITING_TIME_SCALE * 500));
+				sleep((long) (speedScale * 500));
 
+				// find empty wash bay
 				WashBay emptyWashBay = null;
 				for (WashBay washBay : washBays){
 					if(washBay.isEmpty()) {
@@ -36,20 +38,23 @@ public class Controller extends Thread{
 
 				controllerUI.goToNextQueue(carQueues.get(lastPicked));
 
+				// get waiting car
 				Car car = carQueues.get(lastPicked).getFirst();
 				lastPicked = (lastPicked + 1) % carQueues.size();
 				if (car == null) continue;
 
-				car.washBay = emptyWashBay;
-				synchronized (car.lock) {
-					car.lock.notify();
-				}
-			}
-			catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
+				car.setWashBay(emptyWashBay);
+				emptyWashBay.setCar(car);
 
+				sleep((long) (car.getSpeedScale() * 500));
+			}
+			catch (InterruptedException ignored) {
+				break;
+			}
 		}
     }
-
+	public void setSpeedScale(double speedScale) {
+		this.speedScale = speedScale;
+		controllerUI.changeAnimationSpeed(speedScale);
+	}
 }
